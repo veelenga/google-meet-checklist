@@ -1,31 +1,29 @@
 import './index.css'
+import { uiService } from '../services/ui'
 
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('popup.js loaded')
+function initializePopup() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    console.log('tabs', tabs)
-    chrome.tabs.sendMessage(tabs[0].id, { action: 'getParticipants' }, (response) => {
-      console.log('response', response)
+    chrome.tabs.sendMessage(tabs[0].id, { action: 'getMeetingInfo' }, (response) => {
       if (response && response.participants) {
+        const { meetingId, participants } = response
+
+        // Add reset button
+        const headerActions = document.createElement('div')
+        headerActions.className = 'header-actions'
+        headerActions.appendChild(uiService.createResetButton(meetingId))
+        document.querySelector('.header').appendChild(headerActions)
+
+        // Add participants
         const participantsList = document.getElementById('participantsList')
+        participantsList.innerHTML = '' // Clear existing list
 
-        response.participants.forEach((participant) => {
-          const div = document.createElement('div')
-          div.className = 'participant'
-
-          const checkbox = document.createElement('input')
-          checkbox.type = 'checkbox'
-          checkbox.id = participant.id
-
-          const label = document.createElement('label')
-          label.htmlFor = participant.id
-          label.textContent = participant.name
-
-          div.appendChild(checkbox)
-          div.appendChild(label)
-          participantsList.appendChild(div)
+        participants.forEach((participant) => {
+          const participantElement = uiService.createParticipantElement(participant, meetingId)
+          participantsList.appendChild(participantElement)
         })
       }
     })
   })
-})
+}
+
+document.addEventListener('DOMContentLoaded', initializePopup)

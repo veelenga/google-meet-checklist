@@ -1,3 +1,9 @@
+function getMeetingId() {
+  // Extract meeting ID from URL
+  const meetingId = window.location.pathname.split('/')[1]
+  return meetingId
+}
+
 function getParticipants() {
   const participants = []
   const participantElements = document.querySelectorAll('[role="listitem"][data-participant-id]')
@@ -5,10 +11,16 @@ function getParticipants() {
   participantElements.forEach((element) => {
     const name =
       element.getAttribute('aria-label') || element.querySelector('[role="button"]')?.textContent
-    if (name) {
+
+    // Filter out system entries and ensure we have a valid name
+    if (
+      name &&
+      !name.includes('spaces/') &&
+      !name.includes('visual_effects') &&
+      !name.includes('devices/')
+    ) {
       participants.push({
         name: name.replace(' (Meeting host)', '').trim(),
-        id: element.getAttribute('data-participant-id'),
       })
     }
   })
@@ -17,9 +29,10 @@ function getParticipants() {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('participants:', getParticipants())
-
-  if (request.action === 'getParticipants') {
-    sendResponse({ participants: getParticipants() })
+  if (request.action === 'getMeetingInfo') {
+    sendResponse({
+      meetingId: getMeetingId(),
+      participants: getParticipants(),
+    })
   }
 })
