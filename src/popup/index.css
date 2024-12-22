@@ -25,11 +25,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 12px;
 }
 
 .header h2 {
   margin: 0;
-  padding-bottom: 12px;
   font-size: 18px;
   font-weight: 500;
   color: var(--text-primary);
