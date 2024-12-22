@@ -19,8 +19,16 @@ function getParticipants() {
       !name.includes('visual_effects') &&
       !name.includes('devices/')
     ) {
+      // Get profile picture
+      const imgElement = element.querySelector('img[src^="https://"]')
+      const avatar = element.querySelector('[data-self-name]')
+      const profilePic = imgElement ? imgElement.src : null
+      const initials = avatar ? avatar.textContent.trim() : name.charAt(0)
+
       participants.push({
         name: name.replace(' (Meeting host)', '').trim(),
+        profilePic,
+        initials,
       })
     }
   })

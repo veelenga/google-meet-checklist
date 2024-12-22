@@ -1,6 +1,23 @@
 import { storageService } from './storage'
 
 export const uiService = {
+  createAvatarElement(participant) {
+    const avatar = document.createElement('div')
+    avatar.className = 'participant-avatar'
+
+    if (participant.profilePic) {
+      const img = document.createElement('img')
+      img.src = participant.profilePic
+      img.alt = `${participant.name}'s profile picture`
+      avatar.appendChild(img)
+    } else {
+      avatar.classList.add('no-image')
+      avatar.textContent = participant.initials
+    }
+
+    return avatar
+  },
+
   createParticipantElement(participant, meetingId) {
     const div = document.createElement('div')
     div.className = 'participant'
@@ -18,11 +35,14 @@ export const uiService = {
       storageService.updateParticipantStatus(meetingId, participant.name, e.target.checked)
     })
 
+    const avatar = this.createAvatarElement(participant)
+
     const label = document.createElement('label')
     label.htmlFor = checkbox.id
     label.textContent = participant.name
 
     div.appendChild(checkbox)
+    div.appendChild(avatar)
     div.appendChild(label)
     return div
   },
