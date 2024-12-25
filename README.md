@@ -2,6 +2,8 @@
 
 A chrome extension that adds persisted (to local stage) checkboxes in front of participant list.
 
+![](demo.png)
+
 ## Packing
 
 After the development of your extension run the command

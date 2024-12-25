@@ -149,39 +149,66 @@ async function initializeObserver() {
     // Wait for the participants panel to be opened
     await waitForElement('[role="list"]')
 
+    function processAllParticipants() {
+      const allParticipants = document.querySelectorAll('[role="listitem"][data-participant-id]')
+      allParticipants.forEach((element) => {
+        addCheckboxToParticipant(element, meetingId)
+      })
+    }
+
     // Process existing participants
-    const existingParticipants = document.querySelectorAll('[role="listitem"][data-participant-id]')
-    existingParticipants.forEach((element) => {
-      addCheckboxToParticipant(element, meetingId)
-    })
+    processAllParticipants()
 
     // Set up observer for participant list changes
     const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === 1 && node.matches('[role="listitem"][data-participant-id]')) {
-            addCheckboxToParticipant(node, meetingId)
-          }
-        })
-      })
+      // Check if any mutation involves our target elements
+      const relevantMutation = mutations.some(
+        (mutation) =>
+          mutation.target.matches?.('[role="list"], [role="region"], [role="listitem"]') ||
+          Array.from(mutation.addedNodes).some(
+            (node) =>
+              node.nodeType === 1 &&
+              (node.matches?.('[role="listitem"]') || node.querySelector?.('[role="listitem"]')),
+          ),
+      )
 
-      // Also check all existing participants
-      const allParticipants = document.querySelectorAll('[role="listitem"][data-participant-id]')
-      allParticipants.forEach((element) => {
-        if (!element.querySelector('.participant-checkbox')) {
-          addCheckboxToParticipant(element, meetingId)
-        }
-      })
+      if (relevantMutation) {
+        processAllParticipants()
+      }
     })
 
-    // Find and observe the participants list
+    // Observe both the list container and the parent region
+    const participantsRegion = document.querySelector('[role="region"][id]')
     const participantsList = document.querySelector('[role="list"]')
+
+    if (participantsRegion) {
+      observer.observe(participantsRegion, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+      })
+    }
+
     if (participantsList) {
       observer.observe(participantsList, {
         childList: true,
         subtree: true,
+        attributes: true,
       })
     }
+
+    // Additional observer for the body to catch major structural changes
+    const bodyObserver = new MutationObserver((mutations) => {
+      if (document.querySelector('[role="list"]')) {
+        processAllParticipants()
+      }
+    })
+
+    bodyObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    })
   } catch (error) {
     console.error('Error initializing observer:', error)
   }
